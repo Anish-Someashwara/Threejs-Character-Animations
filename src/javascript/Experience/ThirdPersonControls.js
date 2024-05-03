@@ -50,7 +50,7 @@ export default class ThirdPersonControls {
 		});
 		this.orbitControl = orbitControl;
 		this.camera = camera;
-		this.#updateCameraTarget(0, 0);
+		this.#updateCameraTarget(this.model.position.x, this.model.position.z);
 	}
 
 	switchRunToggle() {
@@ -93,45 +93,22 @@ export default class ThirdPersonControls {
 	}
 
 	update(delta, keysPressed) {
-		const directionPressed = DIRECTIONS.some(
-			(key) => keysPressed[key] == true
-		);
+		const directionPressed = DIRECTIONS.some( (key) => keysPressed[key] == true );
 
 		var play = "";
-		if (directionPressed && this.toggleRun) {
-			play = "NinjaFastRun";
-		}
-        else if(directionPressed && keysPressed.control){
-            console.log("G pressed")
-            play = "NinjaPunch"
-        }  
-        else if(keysPressed.q && keysPressed.control){
-            console.log("q pressed")
-            play = "NinjaKick"
-        }  
-        
-        else if (directionPressed) {
-			play = "NinjaWalking";
-		}
-        else if(keysPressed.c){
-            play = 'SecretWalking'
-        }
-        else if(keysPressed.o){
-            play = 'NinjaLowCrawl'
-        }
-        
-        else {
-			play = "NinjaIdle";
-		}
-        // console.log(keysPressed)
+		if (directionPressed && this.toggleRun) { play = "NinjaFastRun";}
+        else if(keysPressed.f){ play = "NinjaPunch" }  
+        else if(keysPressed.g){ play = "NinjaKick" }  
+        else if (directionPressed) { play = "NinjaWalking"; }
+        else if(keysPressed.c){ play = 'SecretWalking'}
+        else if(keysPressed.o){ play = 'NinjaLowCrawl'}
+        else { play = "NinjaIdle"; }
 
 		if (this.currentAction != play) {
 			const toPlay = this.animationsMap.get(play);
 			const current = this.animationsMap.get(this.currentAction);
-
 			current.fadeOut(this.fadeDuration);
 			toPlay.reset().fadeIn(this.fadeDuration).play();
-
 			this.currentAction = play;
 		}
 
@@ -140,7 +117,8 @@ export default class ThirdPersonControls {
 		if (
 			this.currentAction == "NinjaWalking" ||
 			this.currentAction == "NinjaFastRun" ||
-            this.currentAction == "SecretWalking"
+            this.currentAction == "SecretWalking" ||
+			this.currentAction == "NinjaLowCrawl"
 		) {
 			// calculate towards camera direction
 			var angleYCameraDirection = Math.atan2(

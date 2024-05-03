@@ -4,7 +4,6 @@ import ThirdPersonControls from "./ThirdPersonControls";
 
 // Custom Scripts
 import Loaders from "./Loaders";
-import { mod } from "three/examples/jsm/nodes/Nodes.js";
 
 export default class MaterialEnvTest {
 	constructor(ThreeEnvironment) {
@@ -15,12 +14,19 @@ export default class MaterialEnvTest {
 		this.loaders = new Loaders(ThreeEnvironment);
 		this.clock = new THREE.Clock();
 		this.animations = [];
-		this.createPlane();
+		// this.createPlane();
 		this.addModel();
 		this.keypadControls();
 	}
 
 	async addModel() {
+		this.loaders.loadGltfByUrl("/models/western_city/scene.gltf")
+		.then((gltf) => {
+			this.scene.add(gltf.scene);
+			gltf.scene.position.y = -0.1;
+		})
+
+		
 		const MODELS_PATHS = {
 			Ninja: "/models/Ninja/Ninja.fbx",
 			NinjaRunForward: "/models/Ninja/NinjaRunForward.fbx",
@@ -44,14 +50,10 @@ export default class MaterialEnvTest {
 				const model = loadedModels[modelName];
 				const animations = model.animations;
 
-				// Modify animation names based on the model name and filter animations
 				const filteredAnimations = animations
 					.map((animation) => {
-						// Remove underscores and spaces from animation name
-						let modifiedName = modelName.replace(/[_\s]/g, "");
-						// Remove "maximo.com" from animation name
-						modifiedName = modifiedName.replace("maximo.com", "");
-						// Assign modified name to animation
+						let modifiedName = modelName.replace(/[_\s]/g, ""); // Remove underscores and spaces from animation name
+						modifiedName = modifiedName.replace("maximo.com", ""); // Remove "maximo.com" from animation name
 						animation.name = modifiedName;
 						return animation;
 					})
@@ -60,18 +62,17 @@ export default class MaterialEnvTest {
 							!animation.name.startsWith("Take") &&
 							animation.tracks.length > 0
 					);
-				// Filter animations whose name doesn't start with "Take" and have non-zero tracks length
-
-				// Push modified animations to global animations array
+			
 				this.animations.push(...filteredAnimations);
 			}
 		}
 
-		// this.animations.pop();
 
 		ninjaModel.animations = this.animations;
 		this.scene.add(ninjaModel);
 		ninjaModel.scale.set(0.01, 0.01, 0.01);
+		ninjaModel.position.x = 10;
+		ninjaModel.position.z = 20;
 		ninjaModel.rotation.y = Math.PI;
 
 		console.log(ninjaModel);
@@ -80,12 +81,11 @@ export default class MaterialEnvTest {
 		const mixer = new THREE.AnimationMixer(ninjaModel);
 		const animationsMap = new Map();
 
-		gltfAnimations.forEach((a) => {
-			animationsMap.set(a.name, mixer.clipAction(a));
-		});
+		gltfAnimations.forEach((a) => { animationsMap.set(a.name, mixer.clipAction(a));});
 
 		console.log(animationsMap.get('NinjaKick'))
 		animationsMap.get('NinjaKick').timeScale = 1.5;
+		animationsMap.get('NinjaFastRun').timeScale = 0.5;
 
 		this.characterControls = new ThirdPersonControls(
 			ninjaModel,
@@ -124,11 +124,11 @@ export default class MaterialEnvTest {
 				console.log(event.key)
 				if (event.key != "a" && event.key != "d"){
 					if (event.shiftKey) {
-						console.log("Shift Key Pressed!");
+						// console.log("Shift Key Pressed!");
 						this.characterControls.switchRunToggle();
 					} else {
 						this.keysPressed[event.key.toLowerCase()] = true;
-						console.log("Another Key Pressed!");
+						// console.log("Another Key Pressed!");
 					}
 				}
 			},
