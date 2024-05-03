@@ -14,30 +14,31 @@ export default class MaterialEnvTest {
 		this.loaders = new Loaders(ThreeEnvironment);
 		this.clock = new THREE.Clock();
 		this.animations = [];
-		// this.createPlane();
+		this.createPlane();
 		this.addModel();
-		this.keypadControls();
+		// this.keypadControls();
 	}
 
 	async addModel() {
-		this.loaders.loadGltfByUrl("/models/western_city/scene.gltf")
-		.then((gltf) => {
-			this.scene.add(gltf.scene);
-			gltf.scene.position.y = -0.1;
-		})
+		// this.loaders
+		// 	.loadGltfByUrl("/models/western_city/scene.gltf")
+		// 	.then((gltf) => {
+		// 		this.scene.add(gltf.scene);
+		// 		gltf.scene.position.y = -0.1;
+		// 	});
 
-		
 		const MODELS_PATHS = {
 			Ninja: "/models/Ninja/Ninja.fbx",
-			NinjaRunForward: "/models/Ninja/NinjaRunForward.fbx",
 			NinjaWalking: "/models/Ninja/NinjaWalking.fbx",
 			NinjaFastRun: "/models/Ninja/NinjaFastRun.fbx",
-			SecretWalking: "/models/Ninja/SecretWalking.fbx",
-			SneakWalk: "/models/Ninja/SneakWalk.fbx",
-			NinjaKick: "/models/Ninja/NinjaKick.fbx",
 			NinjaPunch: "/models/Ninja/NinjaPunch.fbx",
 			NinjaIdle: "/models/Ninja/NinjaIdle.fbx",
-			NinjaLowCrawl: "/models/Ninja/NinjaLowCrawl.fbx"
+			NinjaRunJump: "/models/Ninja/RunJump.fbx"
+			// NinjaRunForward: "/models/Ninja/NinjaRunForward.fbx",
+			// SecretWalking: "/models/Ninja/SecretWalking.fbx",
+			// SneakWalk: "/models/Ninja/SneakWalk.fbx",
+			// NinjaKick: "/models/Ninja/NinjaKick.fbx",
+			// NinjaLowCrawl: "/models/Ninja/NinjaLowCrawl.fbx",
 		};
 		const loadedModels = await this.loaders.loadModels(MODELS_PATHS);
 		console.log(loadedModels);
@@ -62,11 +63,10 @@ export default class MaterialEnvTest {
 							!animation.name.startsWith("Take") &&
 							animation.tracks.length > 0
 					);
-			
+
 				this.animations.push(...filteredAnimations);
 			}
 		}
-
 
 		ninjaModel.animations = this.animations;
 		this.scene.add(ninjaModel);
@@ -81,11 +81,13 @@ export default class MaterialEnvTest {
 		const mixer = new THREE.AnimationMixer(ninjaModel);
 		const animationsMap = new Map();
 
-		gltfAnimations.forEach((a) => { animationsMap.set(a.name, mixer.clipAction(a));});
+		gltfAnimations.forEach((a) => {
+			animationsMap.set(a.name, mixer.clipAction(a));
+		});
 
-		console.log(animationsMap.get('NinjaKick'))
-		animationsMap.get('NinjaKick').timeScale = 1.5;
-		animationsMap.get('NinjaFastRun').timeScale = 0.5;
+		// console.log(animationsMap.get("NinjaKick"));
+		// animationsMap.get("NinjaKick").timeScale = 1.5;
+		// animationsMap.get("NinjaFastRun").timeScale = 0.5;
 
 		this.characterControls = new ThirdPersonControls(
 			ninjaModel,
@@ -95,6 +97,9 @@ export default class MaterialEnvTest {
 			this.camera,
 			"NinjaIdle"
 		);
+
+		this.keypadControls();
+
 	}
 
 	addGUIControls() {
@@ -107,8 +112,8 @@ export default class MaterialEnvTest {
 
 		const geometry = new THREE.PlaneGeometry(WIDTH, LENGTH, 255, 255);
 		const material = new THREE.MeshStandardMaterial({
-			color: "red",
-			wireframe: true,
+			color: 0x858383,
+			wireframe: false,
 		});
 
 		const floor = new THREE.Mesh(geometry, material);
@@ -118,19 +123,42 @@ export default class MaterialEnvTest {
 
 	keypadControls() {
 		this.keysPressed = {};
+		var timer;
+		var isKeyPressed = false;
 		document.addEventListener(
 			"keydown",
 			(event) => {
-				console.log(event.key)
-				if (event.key != "a" && event.key != "d"){
-					if (event.shiftKey) {
-						// console.log("Shift Key Pressed!");
-						this.characterControls.switchRunToggle();
-					} else {
-						this.keysPressed[event.key.toLowerCase()] = true;
-						// console.log("Another Key Pressed!");
-					}
+				// if (!isKeyPressed) {
+				// 	isKeyPressed = true;
+				// 	timer = setTimeout(() => {
+				// 		console.log("Key pressed for at least 0.2 second");
+				// 		if (event.key != "a" && event.key != "d") {
+				// 			if (event.shiftKey) {
+				// 				// console.log("Shift Key Pressed!");
+				// 				this.characterControls.switchRunToggle();
+				// 			} else {
+				// 				this.keysPressed[
+				// 					event.key.toLowerCase()
+				// 				] = true;
+				// 				// console.log("Another Key Pressed!");
+				// 			}
+				// 		}
+				// 	}, 300); // 1000 milliseconds = 1 second
+				// }
+
+				
+				if (event.shiftKey) {
+					console.log("Shift Key Pressed!");
+					this.characterControls.switchRunToggle();
+					this.keysPressed[event.key.toLowerCase()] = true;
+
+				} else {
+					this.keysPressed[event.key.toLowerCase()] = true;
+					// console.log("Another Key Pressed!");
 				}
+				
+				console.log(this.keysPressed)
+				
 			},
 			false
 		);
@@ -138,10 +166,26 @@ export default class MaterialEnvTest {
 		document.addEventListener(
 			"keyup",
 			(event) => {
+				// if (isKeyPressed) {
+				// 	clearTimeout(timer);
+				// 	isKeyPressed = false;
+				// 	console.log("Key released before 1 second");
+				// 	this.keysPressed[event.key.toLowerCase()] = false;
+				// }
+
+				if (event.key === "Shift") {
+					console.log("Shift Key unpressed!");
+					this.characterControls.switchRunToggle();
+				}
 				this.keysPressed[event.key.toLowerCase()] = false;
+				console.log(this.keysPressed)
+
 			},
 			false
 		);
+
+		// document.addEventListener('mousedown', ()=>{this.keysPressed["mouse"] = true;});
+		// document.addEventListener('mouseup', ()=>{this.keysPressed["mouse"] = false;});
 	}
 
 	update() {

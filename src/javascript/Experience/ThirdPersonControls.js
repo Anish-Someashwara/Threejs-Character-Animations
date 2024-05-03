@@ -27,8 +27,8 @@ export default class ThirdPersonControls {
 	cameraTarget = new THREE.Vector3();
 
 	// constants
-	fadeDuration = 0.2;
-	runVelocity = 5;
+	fadeDuration = 0.5;
+	runVelocity = 7;
 	walkVelocity = 2;
 
 	constructor(
@@ -50,7 +50,13 @@ export default class ThirdPersonControls {
 		});
 		this.orbitControl = orbitControl;
 		this.camera = camera;
-		this.#updateCameraTarget(this.model.position.x, this.model.position.z);
+		// this.camera.position.x = 10;
+		// this.camera.position.y = 2;
+		// this.camera.position.z = 24;
+		// this.camera.lookAt(this.model.position)
+		// move camera
+	
+		this.#updateCameraTarget(-this.model.position.x, -this.model.position.z);
 	}
 
 	switchRunToggle() {
@@ -71,6 +77,32 @@ export default class ThirdPersonControls {
 		this.cameraTarget.z = this.model.position.z;
 		this.orbitControl.target = this.cameraTarget;
 	}
+
+	#directionOffset2(keysPressed) {
+        var directionOffset = 0 // w
+
+        if (keysPressed[W]) {
+            if (keysPressed[A]) {
+                directionOffset = Math.PI / 4 // w+a
+            } else if (keysPressed[D]) {
+                directionOffset = - Math.PI / 4 // w+d
+            }
+        } else if (keysPressed[S]) {
+            if (keysPressed[A]) {
+                directionOffset = Math.PI / 4 + Math.PI / 2 // s+a
+            } else if (keysPressed[D]) {
+                directionOffset = -Math.PI / 4 - Math.PI / 2 // s+d
+            } else {
+                directionOffset = Math.PI // s
+            }
+        } else if (keysPressed[A]) {
+            directionOffset = Math.PI / 2 // a
+        } else if (keysPressed[D]) {
+            directionOffset = - Math.PI / 2 // d
+        }
+
+        return directionOffset
+    }
 
 	#directionOffset(keysPressed) {
 		let directionOffset = 0;
@@ -94,16 +126,19 @@ export default class ThirdPersonControls {
 
 	update(delta, keysPressed) {
 		const directionPressed = DIRECTIONS.some( (key) => keysPressed[key] == true );
-
+		if(!directionPressed) keysPressed.shift = false;
 		var play = "";
-		if (directionPressed && this.toggleRun) { play = "NinjaFastRun";}
-        else if(keysPressed.f){ play = "NinjaPunch" }  
-        else if(keysPressed.g){ play = "NinjaKick" }  
+		// if (directionPressed && this.toggleRun) { play = "NinjaFastRun";}
+		if (directionPressed && keysPressed.shift) { play = "NinjaFastRun";}
+		else if(directionPressed && keysPressed.c){ play = "NinjaRunJump"}
         else if (directionPressed) { play = "NinjaWalking"; }
-        else if(keysPressed.c){ play = 'SecretWalking'}
-        else if(keysPressed.o){ play = 'NinjaLowCrawl'}
+        else if(keysPressed.f){ play = "NinjaPunch" }  
         else { play = "NinjaIdle"; }
-
+        // else if(keysPressed.g){ play = "NinjaKick" }  
+        // else if(keysPressed.c){ play = 'SecretWalking'}
+        // else if(keysPressed.o){ play = 'NinjaLowCrawl'}
+		// console.log(directionPressed)
+		// console.log(keysPressed)
 		if (this.currentAction != play) {
 			const toPlay = this.animationsMap.get(play);
 			const current = this.animationsMap.get(this.currentAction);
@@ -118,7 +153,7 @@ export default class ThirdPersonControls {
 			this.currentAction == "NinjaWalking" ||
 			this.currentAction == "NinjaFastRun" ||
             this.currentAction == "SecretWalking" ||
-			this.currentAction == "NinjaLowCrawl"
+			this.currentAction == "NinjaRunJump"
 		) {
 			// calculate towards camera direction
 			var angleYCameraDirection = Math.atan2(
